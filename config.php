@@ -2,9 +2,9 @@
 error_reporting(E_ALL ^ E_DEPRECATED);
 date_default_timezone_set("Asia/Jakarta");
 $host = "localhost"; // Nama host
-$username = "aplikasikuco_dbs"; // Username database
-$password = "inJLdq@zJFZc"; // Password database
-$database = "aplikasikuco_dbs"; // Nama database
+$username = "u9017608_root"; // Username database
+$password = "dhinie12"; // Password database
+$database = "u9017608_tokoku"; // Nama database
 
 /**$mysql_user="aplikasikuco_dbs";
  * $mysql_password="inJLdq@zJFZc";
