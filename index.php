@@ -9,7 +9,7 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
             $username = trim(htmlspecialchars(mysqli_real_escape_string($config, $_REQUEST['username'])));
             $password = trim(htmlspecialchars(mysqli_real_escape_string($config, $_REQUEST['password'])));
 
-            $querylogin = mysqli_query($config, "SELECT * FROM tab_user WHERE username = BINARY'$username' AND password = MD5('$password') AND status='1'") or die(mysql_error());
+            $querylogin = mysqli_query($config, "SELECT a.*, b.perusahaan FROM tab_user a, setting b WHERE a.id=b.iduser and a.username = BINARY'$username' AND a.password = MD5('$password') AND a.status='1'") or die(mysql_error());
             if (mysqli_num_rows($querylogin) > 0) {
                 $data = mysqli_fetch_array($querylogin);
 
@@ -42,6 +42,7 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
                         $tmp["plan"] = $data[11];
                         $tmp["tgl_registrasi"] = $data[12];
                         $tmp["last_login"] = $data[13];
+                        $tmp["perusahaan"] = $data["perusahaan"];
                         array_push($respon["received"], $tmp);
                         $respon["pesan"] = "Login berhasil!";
                         // memprint/mencetak JSON respon
@@ -72,6 +73,7 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
                     $tmp["plan"] = $data[11];
                     $tmp["tgl_registrasi"] = $data[12];
                     $tmp["last_login"] = $data[13];
+                    $tmp["perusahaan"] = $data["perusahaan"];
                     array_push($respon["received"], $tmp);
                     $respon["pesan"] = "Login berhasil!";
 // memprint/mencetak JSON respon
