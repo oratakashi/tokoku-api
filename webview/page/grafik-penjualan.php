@@ -47,8 +47,8 @@ while($datael2=mysqli_fetch_array($kuweriel2)) {
 			    ],
 				datasets: [{
 					label: 'Penjualan',
-					backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
-					borderColor: window.chartColors.red,
+					backgroundColor: color(window.chartColors.yellow).alpha(0.5).rgbString(),
+					borderColor: window.chartColors.yellow,
 					fill: false,
 					data: [
 <?php
