@@ -1,5 +1,5 @@
 <?php
-if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '192.168.42.27'){
+if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '192.168.201.240'){
     error_reporting(E_ALL ^ E_DEPRECATED);
     date_default_timezone_set("Asia/Jakarta");
     $host = "localhost"; // Nama host

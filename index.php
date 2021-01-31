@@ -756,7 +756,7 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
                 array_push($respon["received"], $tmp);
             }
             $respon["total_belanja"] = $total;
-            $respon["textprint"] = $datab['pesan'];;
+            $respon["textprint"] = $datab['pesan'];
             $respon["pesan"] = "Data daftar belanja";
 // memprint/mencetak JSON respon
         } else {
@@ -973,7 +973,7 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
             $respon["id_penjualan"] = $idjual;
             $respon["pelanggan"] = $datab['pelanggan'];
             $respon["iduser"] = $iduser;
-            $respon["tanggal"] = $datab['tgl'];;
+            $respon["tanggal"] = $datab['tgl'];
             $respon["received"] = array();
             $total = 0;
             $qrydtl = mysqli_query($config, "SELECT * FROM dtlpenjualan WHERE kode_penjualan='$idjual'") or die(mysql_error());
@@ -1209,7 +1209,7 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
                     $tmp = array();
                     $tmp["tanggal"] = indoDate($data['tgl']);
 
-                    $tmp["pelanggan"] = ucfirst($dacus['nama_customers']);;
+                    $tmp["pelanggan"] = ucfirst($dacus['nama_customers']);
                     $tmp["id_penjualan"] = $data['kode_penjualan'];
                     $tmp["total_piutang"] = number_format($data['kurang'], 2);
                     $tmp["link_whatsapp"] = "https://api.whatsapp.com/send?phone=" . $nomor_tujuan . "&text=" . $rawmsg;
@@ -1240,7 +1240,7 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
 
                     $tmp = array();
                     $tmp["tanggal"] = indoDate($data['tgl']);
-                    $tmp["pelanggan"] = ucfirst($dacus['nama_customers']);;
+                    $tmp["pelanggan"] = ucfirst($dacus['nama_customers']);
                     $tmp["id_penjualan"] = $data['kode_penjualan'];
                     $tmp["total_piutang"] = number_format($data['kurang'], 2);
                     $tmp["link_whatsapp"] = "https://api.whatsapp.com/send?phone=" . $nomor_tujuan . "&text=" . $rawmsg;
@@ -1350,7 +1350,7 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
                 $respon["sukses"] = 1;
                 $respon["received"] = array("total_belanja" => $total, "total_bayar" => $pelunasan, "pembayaran" => $pembayaran, "total_bayar" => $bayar);
                 $respon["pesan"] = "Pelunasan Berhasil Ditambahkan";
-// memprint/mencetak JSON respon}
+
             }
 
         } else {
@@ -1360,6 +1360,17 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
 // memprint/mencetak JSON respon
         }
         echo json_encode($respon);
+    } else if(!empty($_REQUEST['data']) && $_REQUEST['data'] == 'riwayat-penjualan'){
+        $iduser = $_REQUEST['iduser'];
+
+        $qrypenjualan = mysqli_query($config, "SELECT * FROM tblpenjualan WHERE iduser='$iduser'") or die(mysql_error());
+
+        $respon["sukses"] = 1;
+        $respon["pesan"] = "Sukses mendapatkan data penjualan";
+        $respon["received"] = array();
+        while ($fl = mysqli_fetch_array($qrypenjualan)) {
+            array_push($respon["pembayaran"], $fl);
+        }
     } else if (!empty($_REQUEST['data']) && $_REQUEST['data'] == 'halaman') {
 // jika data tidak terisi/tidak terset
         $respon["sukses"] = 1;
