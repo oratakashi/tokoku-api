@@ -1371,6 +1371,8 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
         while ($fl = mysqli_fetch_array($qrypenjualan)) {
             array_push($respon["pembayaran"], $fl);
         }
+
+        echo json_encode($respon);
     } else if (!empty($_REQUEST['data']) && $_REQUEST['data'] == 'halaman') {
 // jika data tidak terisi/tidak terset
         $respon["sukses"] = 1;
