@@ -1369,7 +1369,7 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
         $respon["pesan"] = "Sukses mendapatkan data penjualan";
         $respon["received"] = array();
         while ($fl = mysqli_fetch_array($qrypenjualan)) {
-            array_push($respon["pembayaran"], $fl);
+            array_push($respon["received"], $fl);
         }
 
         echo json_encode($respon);
