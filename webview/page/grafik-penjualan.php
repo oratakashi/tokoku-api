@@ -8,21 +8,7 @@
 		-ms-user-select: none;
 	}
 	</style>
-<section>
-    <div style="padding:0px;">
-    <div class="row clearfix">
-<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-    <div class="card">
-        <div class="body">
-            <div id="container" style="width: 100%;">
-                <canvas id="myChart1"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-    </div>
-    </div>
-</section>
+<canvas id="myChart1"></canvas>
 <script>
 		var timeFormat = 'MM/DD/YYYY HH:mm';
 
