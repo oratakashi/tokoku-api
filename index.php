@@ -1363,7 +1363,7 @@ if (!empty($_REQUEST['api']) && $_REQUEST['api'] == $apikey) {
     } else if(!empty($_REQUEST['data']) && $_REQUEST['data'] == 'riwayat-penjualan'){
         $iduser = $_REQUEST['iduser'];
 
-        $qrypenjualan = mysqli_query($config, "SELECT * FROM tblpenjualan WHERE iduser='$iduser'") or die(mysql_error());
+        $qrypenjualan = mysqli_query($config, "SELECT * FROM tblpenjualan WHERE iduser='$iduser' limit 5") or die(mysql_error());
 
         $respon["sukses"] = 1;
         $respon["pesan"] = "Sukses mendapatkan data penjualan";
