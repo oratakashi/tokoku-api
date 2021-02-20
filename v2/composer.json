@@ -3,12 +3,10 @@
 	"name": "chriskacerguis/codeigniter-restserver",
 	"type": "project",
 	"homepage": "https://github.com/chriskacerguis/codeigniter-restserver",
-	"authors": [
-		{
-			"name": "Chris Kacerguis",
-			"role": "Developer"
-		}
-	],
+	"authors": [{
+		"name": "Chris Kacerguis",
+		"role": "Developer"
+	}],
 	"require": {
 		"php": ">=5.5"
 	},

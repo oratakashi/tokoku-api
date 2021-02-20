@@ -28,6 +28,23 @@ class StockModel extends CI_Model
     $this->db->order_by('tanggal', 'desc');
     return $this->db->get('tbltambah_stok', 20, $offset)->result_array();
   }
+
+  public function readById($id)
+  {
+    $this->db->where('kode_stok', $id);
+    return $this->db->get('tbltambah_stok')->row_array();
+  }
+
+  public function readDetail($id, $iduser)
+  {
+    return $this->db->get_where(
+      'dtltambah_stok',
+      [
+        "kode_stok"   => $id,
+        "iduser"      => $iduser
+      ]
+    )->result_array();
+  }
 }
 
 /* End of file StockModel.php */

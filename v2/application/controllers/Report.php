@@ -15,6 +15,7 @@ class Report extends REST_Controller
     $this->load->model('SellingModel', 'selling');
     $this->load->model('CustomerModel', 'customer');
     $this->load->model('StockModel', 'stock');
+    $this->load->model('InventoryModel', 'inventory');
   }
 
   public function index_get()
@@ -26,6 +27,8 @@ class Report extends REST_Controller
         $this->stocks();
       } else if ($this->uri->segment(2) === "inventories") {
         $this->inventories();
+      } else if ($this->uri->segment(2) === "expanses") {
+        $this->expanses();
       } else {
         $message = array(
           "status"        => FALSE,
@@ -214,88 +217,291 @@ class Report extends REST_Controller
   public function stocks()
   {
     if (!empty($this->get("iduser"))) {
+      if (empty($this->uri->segment(3))) {
+        if (empty($this->get("from")) && empty($this->get("to"))) {
+          if (empty($this->get("page"))) {
+            $query = $this->stock->readThisMonth($this->get("iduser"));
+
+            $total = 0;
+            foreach ($query as $row) {
+              $total += $row["total"];
+            }
+            $data = array(
+              "total"   => $total,
+              "report"  => $query
+            );
+
+            $message = array(
+              "status"        => TRUE,
+              "message"       => "Found " . count($query) . " Data",
+              "data"          => $data
+            );
+
+            $this->response($message, REST_Controller::HTTP_OK);
+          } else {
+            $query = $this->stock->readThisMonthLimit($this->get("iduser"), ($this->get("page") * 20) - 20);
+
+            $total = 0;
+            foreach ($query as $row) {
+              $total += $row["total"];
+            }
+            $data = array(
+              "total"   => $total,
+              "report"  => $query
+            );
+
+            $message = array(
+              "status"        => TRUE,
+              "message"       => "Found " . count($query) . " Data",
+              "data"          => $data
+            );
+
+            $this->response($message, REST_Controller::HTTP_OK);
+          }
+        } else if (!empty($this->get("from")) && !empty($this->get("to"))) {
+          $to = $this->get("to");
+          $from = $this->get("from");
+          if (empty($this->get("page"))) {
+            $query = $this->stock->readFromDate($from, $to, $this->get("iduser"));
+
+            $total = 0;
+            foreach ($query as $row) {
+              $total += $row["total"];
+            }
+            $data = array(
+              "total"   => $total,
+              "report"  => $query
+            );
+
+            $message = array(
+              "status"        => TRUE,
+              "message"       => "Found " . count($query) . " Data",
+              "data"          => $data
+            );
+
+            $this->response($message, REST_Controller::HTTP_OK);
+          } else {
+            $query = $this->stock->readFromDateLimit($from, $to, $this->get("iduser"), ($this->get("page") * 20) - 20);
+
+            $total = 0;
+            foreach ($query as $row) {
+              $total += $row["total"];
+            }
+            $data = array(
+              "total"   => $total,
+              "report"  => $query
+            );
+
+            $message = array(
+              "status"        => TRUE,
+              "message"       => "Found " . count($query) . " Data",
+              "data"          => $data
+            );
+
+            $this->response($message, REST_Controller::HTTP_OK);
+          }
+        } else if (empty($this->get("from")) || empty($this->get("to"))) {
+          $message = array(
+            "status"        => FALSE,
+            "message"       => "Failed to get data by date given!",
+            "data"          => null
+          );
+
+          $this->response($message, REST_Controller::HTTP_BAD_REQUEST);
+        }
+      } else {
+        $this->stocks_detail();
+      }
+    } else {
+      $message = array(
+        "status"        => FALSE,
+        "message"       => "ID User Tidak dikenali",
+        "data"          => null
+      );
+
+      $this->response($message, REST_Controller::HTTP_BAD_REQUEST);
+    }
+  }
+
+  public function stocks_detail()
+  {
+    $detail = $this->stock->readById($this->uri->segment(3));
+
+    if ($detail != null) {
+      $detail["detail"] = $this->stock->readDetail(
+        $this->uri->segment(3),
+        $this->get("iduser")
+      );
+      $message = array(
+        "status"        => TRUE,
+        "message"       => "Found Detail From " . $detail["kode_stok"],
+        "data"          => $detail
+      );
+
+      $this->response($message, REST_Controller::HTTP_OK);
+    } else {
+      $message = array(
+        "status"        => FALSE,
+        "message"       => "ID Transaction not found!",
+        "data"          => null
+      );
+
+      $this->response($message, REST_Controller::HTTP_BAD_REQUEST);
+    }
+  }
+
+  public function inventories()
+  {
+    if (!empty($this->get("iduser"))) {
+      if (empty($this->get("query"))) {
+        if (empty($this->get("page"))) {
+          $data = $this->inventory->readLimit($this->get("iduser"), 0);
+
+          $total = 0;
+          foreach ($data as $key => $row) {
+            unset($data[$key]["total"]);
+            unset($data[$key]["iduser"]);
+            unset($data[$key]["discount"]);
+            unset($data[$key]["expired"]);
+            unset($data[$key]["hargag1"]);
+            unset($data[$key]["hargag2"]);
+            unset($data[$key]["hargaj"]);
+            $totalTambahStock = $this->inventory->readTambahStokTotal($row["id_bahan"])["total"];
+            $totalPenjualan = $this->inventory->readPenjualanTotal($row["id_bahan"])["total"];
+            $data[$key]["jumlah"] = $totalTambahStock - $totalPenjualan;
+            $total += ($totalTambahStock - $totalPenjualan) * $row['harga_per'];
+            $data[$key]["harga_total"] = strval(($totalTambahStock - $totalPenjualan) * $row['harga_per']);
+            $data[$key]["harga_jual"] = $row['harga_per'];
+
+            unset($data[$key]["harga_per"]);
+          }
+
+          $message = array(
+            "status"        => FALSE,
+            "message"       => "Found " . count($data) . " Data",
+            "data"          => [
+              "total" => $total,
+              "data"  => $data
+            ]
+          );
+
+          $this->response($message, REST_Controller::HTTP_OK);
+        } else {
+          $data = $this->inventory->readLimit($this->get("iduser"), ($this->get("page") * 20) - 20);
+
+          $total = 0;
+          foreach ($data as $key => $row) {
+            unset($data[$key]["total"]);
+            unset($data[$key]["iduser"]);
+            unset($data[$key]["discount"]);
+            unset($data[$key]["expired"]);
+            unset($data[$key]["hargag1"]);
+            unset($data[$key]["hargag2"]);
+            unset($data[$key]["hargaj"]);
+            $totalTambahStock = $this->inventory->readTambahStokTotal($row["id_bahan"])["total"];
+            $totalPenjualan = $this->inventory->readPenjualanTotal($row["id_bahan"])["total"];
+            $data[$key]["jumlah"] = $totalTambahStock - $totalPenjualan;
+            $total += ($totalTambahStock - $totalPenjualan) * $row['harga_per'];
+            $data[$key]["harga_total"] = strval(($totalTambahStock - $totalPenjualan) * $row['harga_per']);
+            $data[$key]["harga_jual"] = $row['harga_per'];
+
+            unset($data[$key]["harga_per"]);
+          }
+
+          $message = array(
+            "status"        => FALSE,
+            "message"       => "Found " . count($data) . " Data",
+            "data"          => [
+              "total" => $total,
+              "data"  => $data
+            ]
+          );
+
+          $this->response($message, REST_Controller::HTTP_OK);
+        }
+      } else {
+        if (empty($this->get("page"))) {
+          $data = $this->inventory->searchLimit($this->get("query"), $this->get("iduser"), 0);
+
+          $total = 0;
+          foreach ($data as $key => $row) {
+            unset($data[$key]["total"]);
+            unset($data[$key]["iduser"]);
+            unset($data[$key]["discount"]);
+            unset($data[$key]["expired"]);
+            unset($data[$key]["hargag1"]);
+            unset($data[$key]["hargag2"]);
+            unset($data[$key]["hargaj"]);
+            $totalTambahStock = $this->inventory->readTambahStokTotal($row["id_bahan"])["total"];
+            $totalPenjualan = $this->inventory->readPenjualanTotal($row["id_bahan"])["total"];
+            $data[$key]["jumlah"] = $totalTambahStock - $totalPenjualan;
+            $total += ($totalTambahStock - $totalPenjualan) * $row['harga_per'];
+            $data[$key]["harga_total"] = strval(($totalTambahStock - $totalPenjualan) * $row['harga_per']);
+            $data[$key]["harga_jual"] = $row['harga_per'];
+
+            unset($data[$key]["harga_per"]);
+          }
+
+          $message = array(
+            "status"        => FALSE,
+            "message"       => "Found " . count($data) . " Data",
+            "data"          => [
+              "total" => $total,
+              "data"  => $data
+            ]
+          );
+
+          $this->response($message, REST_Controller::HTTP_OK);
+        } else {
+          $data = $this->inventory->searchLimit($this->get("query"), $this->get("iduser"), ($this->get("page") * 20) - 20);
+
+          $total = 0;
+          foreach ($data as $key => $row) {
+            unset($data[$key]["total"]);
+            unset($data[$key]["iduser"]);
+            unset($data[$key]["discount"]);
+            unset($data[$key]["expired"]);
+            unset($data[$key]["hargag1"]);
+            unset($data[$key]["hargag2"]);
+            unset($data[$key]["hargaj"]);
+            $totalTambahStock = $this->inventory->readTambahStokTotal($row["id_bahan"])["total"];
+            $totalPenjualan = $this->inventory->readPenjualanTotal($row["id_bahan"])["total"];
+            $data[$key]["jumlah"] = $totalTambahStock - $totalPenjualan;
+            $total += ($totalTambahStock - $totalPenjualan) * $row['harga_per'];
+            $data[$key]["harga_total"] = strval(($totalTambahStock - $totalPenjualan) * $row['harga_per']);
+            $data[$key]["harga_jual"] = $row['harga_per'];
+
+            unset($data[$key]["harga_per"]);
+          }
+
+          $message = array(
+            "status"        => FALSE,
+            "message"       => "Found " . count($data) . " Data",
+            "data"          => [
+              "total" => $total,
+              "data"  => $data
+            ]
+          );
+
+          $this->response($message, REST_Controller::HTTP_OK);
+        }
+      }
+    } else {
+      $message = array(
+        "status"        => FALSE,
+        "message"       => "ID User Tidak dikenali",
+        "data"          => null
+      );
+
+      $this->response($message, REST_Controller::HTTP_BAD_REQUEST);
+    }
+  }
+
+  public function expanses()
+  {
+    if (!empty($this->get("iduser"))) {
       if (empty($this->get("from")) && empty($this->get("to"))) {
-        if (empty($this->get("page"))) {
-          $query = $this->stock->readThisMonth($this->get("iduser"));
-
-          $total = 0;
-          foreach ($query as $row) {
-            $total += $row["total"];
-          }
-          $data = array(
-            "total"   => $total,
-            "report"  => $query
-          );
-
-          $message = array(
-            "status"        => TRUE,
-            "message"       => "Found " . count($query) . " Data",
-            "data"          => $data
-          );
-
-          $this->response($message, REST_Controller::HTTP_OK);
-        } else {
-          $query = $this->stock->readThisMonthLimit($this->get("iduser"), ($this->get("page") * 20) - 20);
-
-          $total = 0;
-          foreach ($query as $row) {
-            $total += $row["total"];
-          }
-          $data = array(
-            "total"   => $total,
-            "report"  => $query
-          );
-
-          $message = array(
-            "status"        => TRUE,
-            "message"       => "Found " . count($query) . " Data",
-            "data"          => $data
-          );
-
-          $this->response($message, REST_Controller::HTTP_OK);
-        }
       } else if (!empty($this->get("from")) && !empty($this->get("to"))) {
-        $to = $this->get("to");
-        $from = $this->get("from");
-        if (empty($this->get("page"))) {
-          $query = $this->stock->readFromDate($from, $to, $this->get("iduser"));
-
-          $total = 0;
-          foreach ($query as $row) {
-            $total += $row["total"];
-          }
-          $data = array(
-            "total"   => $total,
-            "report"  => $query
-          );
-
-          $message = array(
-            "status"        => TRUE,
-            "message"       => "Found " . count($query) . " Data",
-            "data"          => $data
-          );
-
-          $this->response($message, REST_Controller::HTTP_OK);
-        } else {
-          $query = $this->stock->readFromDateLimit($from, $to, $this->get("iduser"), ($this->get("page") * 20) - 20);
-
-          $total = 0;
-          foreach ($query as $row) {
-            $total += $row["total"];
-          }
-          $data = array(
-            "total"   => $total,
-            "report"  => $query
-          );
-
-          $message = array(
-            "status"        => TRUE,
-            "message"       => "Found " . count($query) . " Data",
-            "data"          => $data
-          );
-
-          $this->response($message, REST_Controller::HTTP_OK);
-        }
       } else if (empty($this->get("from")) || empty($this->get("to"))) {
         $message = array(
           "status"        => FALSE,
@@ -314,10 +520,6 @@ class Report extends REST_Controller
 
       $this->response($message, REST_Controller::HTTP_BAD_REQUEST);
     }
-  }
-
-  public function inventories()
-  {
   }
 }
 
