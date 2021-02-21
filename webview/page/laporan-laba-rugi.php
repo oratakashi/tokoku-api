@@ -73,71 +73,126 @@ if (!empty($_POST['darisampai'])) {
 
     $tpengl = $totln['nominal'] + $totncs['debet'] + $tclaim['jnom'];
 } else {
-    $qryjual = mysqli_query($config, "SELECT * ,SUM(jumlah)jumlah FROM dtlpenjualan WHERE iduser='$iduser' GROUP BY nama_barang");
+    // $qryjual = mysqli_query($config, "SELECT * ,SUM(jumlah)jumlah FROM dtlpenjualan WHERE iduser='$iduser' GROUP BY nama_barang");
+    // $qryhpp = mysqli_query($config, "SELECT * ,SUM(jumlah)jumlah FROM dtlpenjualan WHERE iduser='$iduser' GROUP BY nama_barang");
+    // $qrtln = mysqli_query($config, "SELECT * ,SUM(nominal)nominal FROM dtltransaksi WHERE ctg NOT IN ('kt1', 'kt2' , 'kt4', 'rtr') AND iduser='$iduser' GROUP BY nama_tran");
+    // $qrtlnop = mysqli_query($config, "SELECT * ,SUM(jml)jnom FROM dtlclaim WHERE status = 'Y' GROUP BY nama_claim");
+    // $qrncs = mysqli_query($config, "SELECT * ,SUM(debet)debet FROM dtlnoncash WHERE nama_ncs LIKE 'Beban%' GROUP BY nama_ncs");
 
-    $qryhpp = mysqli_query($config, "SELECT * ,SUM(jumlah)jumlah FROM dtlpenjualan WHERE iduser='$iduser' GROUP BY nama_barang");
-
-    $qrtln = mysqli_query($config, "SELECT * ,SUM(nominal)nominal FROM dtltransaksi WHERE ctg NOT IN ('kt1', 'kt2' , 'kt4', 'rtr') AND iduser='$iduser' GROUP BY nama_tran");
-
-    $qrtlnop = mysqli_query($config, "SELECT * ,SUM(jml)jnom FROM dtlclaim WHERE status = 'Y' GROUP BY nama_claim");
-
-    $qrncs = mysqli_query($config, "SELECT * ,SUM(debet)debet FROM dtlnoncash WHERE nama_ncs LIKE 'Beban%' GROUP BY nama_ncs");
-
+    /**
+     * Get Detail Transaksi yang bukan ctg :
+     * - Kt1
+     * - Kt2
+     * - Kt4
+     * - Rtr
+     */
     $qtln = mysqli_query($config, "SELECT * ,SUM(nominal)nominal FROM dtltransaksi WHERE ctg NOT IN ('kt1', 'kt2' , 'kt4', 'rtr') AND iduser='$iduser'");
     $totln = mysqli_fetch_array($qtln);
 
+    /**
+     * Get Detail Transaksi dengan Ctg : rtr
+     */
     $retcs = mysqli_query($config, "SELECT * ,SUM(nominal)nominal FROM dtltransaksi WHERE ctg IN ('rtr') AND iduser='$iduser'");
     $totrecs = mysqli_fetch_array($retcs);
 
+    /**
+     * Get DtlClaim dengan status Y
+     */
     $qtclm = mysqli_query($config, "SELECT * ,SUM(jml)jnom FROM dtlclaim WHERE status = 'Y'");
     $tclaim = mysqli_fetch_array($qtclm);
 
+    /**
+     * Get Detail Transaksi Non Cash Dengan nama Transaksi Terdapat Beban
+     */
     $qtncs = mysqli_query($config, "SELECT * ,SUM(debet)debet FROM dtlnoncash WHERE nama_ncs LIKE 'Beban%'");
     $totncs = mysqli_fetch_array($qtncs);
 
+    /**
+     * Get Detail Transaksi Non Cash Dengan nama Transaksi Terdapat Retur Penjualan
+     */
     $retncs = mysqli_query($config, "SELECT * ,SUM(debet)debet FROM dtlnoncash WHERE nama_ncs LIKE 'Retur Penjualan'");
     $totretncs = mysqli_fetch_array($retncs);
 
+    /**
+     * Menghitung Retur
+     */
+
     $retur = $totrecs['nominal'] + $totretncs['debet'];
 
+    /**
+     * Get Detail Penjualan by ID User
+     */
     $qrytj = mysqli_query($config, "SELECT * ,SUM(jumlah*(harga-ppn))totalj FROM dtlpenjualan WHERE iduser='$iduser'");
     $totalj = mysqli_fetch_array($qrytj);
 
+    /**
+     * Get Data JualPulsa
+     */
     $qwer = mysqli_query($config, "SELECT SUM(total) AS topus FROM tbljualpulsa");
     $cvgh = mysqli_fetch_array($qwer);
     $totalpls = $cvgh['topus'];
 
     $penjualan = $totalj['totalj'];
 
+    /**
+     * Menghitung Omzet
+     */
     $omzet = ($penjualan + $totalpls) - $retur;
 
+    /**
+     * Menghitung Harga Pokok dari Detail Penjualan
+     */
     $qrhp = mysqli_query($config, "SELECT * ,SUM(jumlah*hpp)totahp FROM dtlpenjualan WHERE iduser='$iduser'");
     $totahp = mysqli_fetch_array($qrhp);
 
+    /**
+     * Menghitung Harga Pokok dari Detail Penjualan Pulsa
+     */
     $qrhpl = mysqli_query($config, "SELECT * ,SUM(jumlah*hpp)totahpl FROM dtljualpulsa");
     $totahpl = mysqli_fetch_array($qrhpl);
 
+    /**
+     * Jumlah Harga Pokok dari Penjualan Pulsa dan Penjualan Barang
+     */
     $jumhppj = $totahp['totahp'] + $totahpl['totahpl'];
 
+    /**
+     * Get data Pembelian bahan Join Tabel Stok Bahan dengan detail pembelian bahan
+     */
     $tbeli = mysqli_query($config, "SELECT SUM(dtlpembelian_bahan.jumlah*stok_bahan.harga_per) FROM dtlpembelian_bahan LEFT JOIN stok_bahan ON dtlpembelian_bahan.nama_bahan=stok_bahan.nama_bahan");
     $data_tbeli = mysqli_fetch_array($tbeli);
     $jumlah_tbeli = $data_tbeli[0];
 
+    /**
+     * Menghitung Persediaan dari tabel modal
+     */
     $qry_persediaan = mysqli_query($config, "SELECT SUM(jmlmod) FROM modal WHERE ketmod = 'Persediaan' AND iduser='$iduser'");
     $data_persediaan = mysqli_fetch_array($qry_persediaan);
     $jumlah_persediaan = $data_persediaan[0];
 
+    /**
+     * Menghitung Jumlah Penjualan dari Detail Penjualan
+     */
     $tjal = mysqli_query($config, "SELECT SUM(jumlah*hpp) FROM dtlpenjualan WHERE iduser='$iduser'");
     $data_tjal = mysqli_fetch_array($tjal);
     $jumlah_tjal = $data_tjal[0];
 
+    /**
+     * Menghitung Jumlah Barang
+     */
     $jumlah_barang = $jumlah_tbeli + $jumlah_persediaan - $jumlah_tjal;
 
+    /**
+     * Menghitung Detail Pembelian bahan dari harga dikali jumlah
+     */
     $qrypbeli = mysqli_query($config, "SELECT SUM(harga*jumlah) FROM dtlpembelian_bahan");
     $datapbeli = mysqli_fetch_array($qrypbeli);
     $jumpbeli = $datapbeli[0];
 
-    //$tpengl=$totln['nominal'];
+
+    /**
+     * Menghitung total Pengeluaran
+     */
     $tpengl = $totln['nominal'] + $totncs['debet'] + $tclaim['jnom'];
 }
 ?>
